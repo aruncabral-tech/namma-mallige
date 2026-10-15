@@ -1,0 +1,1 @@
+ALTER TABLE `subscription_orders` ADD `coverage_from` integer;
