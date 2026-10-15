@@ -118,3 +118,32 @@ test("sponsor placement supports enquiries, booked ads and hiding", async () => 
  }
  assert.equal(sponsorSchema.safeParse({...booked,title:''}).success,false);
 });
+
+test('sponsor dates use inclusive India days and preserve the enquiry slot',async()=>{
+ const {sponsorDefaults,sponsorSchema,sponsorStatus,sponsorForDisplay}=await vite.ssrLoadModule('/lib/sponsorship.ts');
+ const campaign=sponsorSchema.parse({...sponsorDefaults,title:'Test sponsor',startDate:'2026-10-15',endDate:'2026-10-16'});
+ for(const [time,status] of [['2026-10-14T18:29:59.999Z','scheduled'],['2026-10-14T18:30:00Z','active'],['2026-10-16T18:29:59.999Z','active'],['2026-10-16T18:30:00Z','expired']]){
+  assert.equal(sponsorStatus(campaign,Date.parse(time)),status);
+  const displayed=sponsorForDisplay(campaign,Date.parse(time));
+  assert.equal(displayed.title,status==='active'?'Test sponsor':'');assert.equal(displayed.enabled,true);
+ }
+ assert.equal(sponsorSchema.safeParse({...campaign,startDate:'2026-02-30'}).success,false);
+ assert.equal(sponsorSchema.safeParse({...campaign,endDate:'2026-10-14'}).success,false);
+ assert.equal(sponsorStatus({...campaign,enabled:false}),'hidden');
+ assert.equal(sponsorStatus({...campaign,startDate:'',endDate:''}),'active');
+ const legacy=sponsorSchema.parse({enabled:true,title:'Old ad',url:'',description:''});
+ assert.equal(legacy.image,'');assert.equal(legacy.startDate,'');assert.equal(legacy.endDate,'');
+});
+test('sponsor images cannot embed HTML or SVG and disappear after expiry',async()=>{
+ const {sponsorDefaults,sponsorSchema}=await vite.ssrLoadModule('/lib/sponsorship.ts');
+ const {SponsorCard}=await vite.ssrLoadModule('/components/sponsor-space.tsx');
+ const campaign={...sponsorDefaults,title:'Business logo',image:'data:image/jpeg;base64,/9j/AA==',endDate:'2026-10-15'};
+ assert.equal(sponsorSchema.safeParse(campaign).success,true);
+ for(const image of ['data:image/svg+xml;base64,PHN2Zz4=','data:text/html;base64,PHNjcmlwdD4=','javascript:alert(1)','https://example.com/track.png','data:image/jpeg;base64,/9j/'+ 'A'.repeat(180000)]){
+  assert.equal(sponsorSchema.safeParse({...campaign,image}).success,false);
+ }
+ const active=renderToStaticMarkup(React.createElement(SponsorCard,{sponsor:campaign,now:Date.parse('2026-10-15T10:00:00Z')}));
+ assert.match(active,/alt="Business logo advertisement"/);
+ const expired=renderToStaticMarkup(React.createElement(SponsorCard,{sponsor:campaign,now:Date.parse('2026-10-15T18:30:00Z')}));
+ assert.doesNotMatch(expired,/<img/);assert.match(expired,/Advertise here/);
+});

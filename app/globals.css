@@ -1413,3 +1413,10 @@ html:has(.bloom-home){scroll-behavior:smooth}
 .owner-form .sponsor-toggle input { width:18px; height:18px; }
 @media(max-width:640px) { .bloom-sponsor { padding:0 16px; } .sponsor-space { flex-wrap:wrap; padding:20px; gap:14px; } .sponsor-emblem { width:42px; height:42px; } .sponsor-copy { flex-basis:calc(100% - 60px); } .sponsor-copy h2 { font-size:18px; } .sponsor-actions { width:100%; align-items:stretch; } .sponsor-enquiry { text-align:center; } }
 @media print { .sponsor-space,.bloom-sponsor { display:none!important; } }
+
+.sponsor-visual { flex-shrink:0; }
+.sponsor-image { display:block; width:180px; height:110px; object-fit:contain; border-radius:10px; border:1px solid #dedfce; background:white; }
+.sponsor-owner-image { display:grid; justify-items:start; gap:10px; }
+.sponsor-owner-image img { max-width:100%; width:360px; max-height:200px; object-fit:contain; border:1px solid #d9ddc9; border-radius:10px; background:white; }
+.sponsor-date-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:640px) { .sponsor-visual:has(.sponsor-image) { width:100%; } .sponsor-image { width:100%; height:auto; max-height:180px; } .sponsor-date-fields { grid-template-columns:1fr; } }
