@@ -1,5 +1,6 @@
 "use client";
 import {DailyBillImage} from "@/components/daily-bill-image";
+import {SponsorSpace} from "@/components/sponsor-space";
 import { MonthlyReports } from "@/components/monthly-reports";
 import { CustomerAccessDialog, CustomerRequests } from "@/components/customer-access";
 import {LiveAppUpdate} from "@/components/live-app-update";
@@ -623,6 +624,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
       <BookSettings key={owner.ownerName + owner.accountType + owner.companyName + owner.location + owner.googleSheetUrl} owner={owner} open={settingsOpen || needsBookSetup} onOpenChange={setSettingsOpen} onSaved={onOwnerChange} />
       {!personal && sharedBill && <CustomerAccessDialog key={sharedBill.id} bill={sharedBill} onClose={() => setSharedBill(null)} />}
       <AlertDialog open={signOutOpen} onOpenChange={open => {if(!signingOut) setSignOutOpen(open);}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Sign out of your book?</AlertDialogTitle><AlertDialogDescription>{dirty ? "You have unsaved entries. Save them first, or sign out and discard those changes." : "Your saved bills and prices will be kept in your account."}</AlertDialogDescription></AlertDialogHeader>{signOutError && <p role="alert" className="quantity-error">{signOutError}</p>}<AlertDialogFooter><AlertDialogCancel disabled={signingOut}>Keep working</AlertDialogCancel><AlertDialogAction disabled={signingOut} onClick={e => {e.preventDefault();void signOut();}}>{signingOut ? "Signing out…" : "Sign out"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+      <SponsorSpace/>
       <footer className="app-footer"><span>{APP_NAME}</span><span>M = Jasmine · J = Pink Jasmine</span><span>Developed by Arun Cabral · Shirva</span><a href="tel:+918971891245">8971891245</a><a href="mailto:ARUN.CABRAL54@GMAIL.COM">ARUN.CABRAL54@GMAIL.COM</a></footer>
       {printDialogVisible && <div className="print-modal-overlay" role="presentation" onClick={closePrintDialog}><section className="print-dialog print-modal-content" role="dialog" aria-modal="true" aria-labelledby="print-dialog-title" onClick={event => event.stopPropagation()}><DialogHeader className="print-dialog-hero"><div className="print-dialog-title-row"><div><span className="print-kicker">Thermal bill studio</span><h2 id="print-dialog-title">Preview & print weekly {printBatch?.length === 1 ? "bill" : "bills"}</h2></div><Button type="button" variant="outline" size="sm" onClick={closePrintDialog}>Close</Button></div><p className="text-muted-foreground text-sm">{printBatch?.length === 1 ? `${printBatch[0].customer} · ${printBatch[0].billNo}` : `${printBatch?.length ?? 0} customer bills ready.`} Grand total, paid amount and pending amount are included.</p></DialogHeader>
         <div className="print-option-grid">

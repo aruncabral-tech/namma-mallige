@@ -100,3 +100,21 @@ test("release checks are never cached", async () => {
   assert.match(response.headers.get('cache-control'),/no-store/);
   assert.equal(typeof (await response.json()).version,'string');
 });
+
+test("sponsor placement supports enquiries, booked ads and hiding", async () => {
+ const {SponsorCard}=await vite.ssrLoadModule('/components/sponsor-space.tsx');
+ const {sponsorDefaults,sponsorSchema}=await vite.ssrLoadModule('/lib/sponsorship.ts');
+ const vacant=renderToStaticMarkup(React.createElement(SponsorCard,{sponsor:sponsorDefaults}));
+ assert.match(vacant,/Advertisement · Space available/);
+ assert.match(vacant,/wa.me\/918971891245/);
+ assert.doesNotMatch(vacant,/<script|<iframe/);
+ const booked=sponsorSchema.parse({...sponsorDefaults,title:'Local business',description:'A local offer',url:'https://example.com/offer'});
+ const html=renderToStaticMarkup(React.createElement(SponsorCard,{sponsor:booked}));
+ assert.match(html,/Sponsored/);assert.match(html,/rel="sponsored noopener noreferrer"/);
+ assert.match(html,/https:\/\/example.com\/offer/);
+ assert.equal(renderToStaticMarkup(React.createElement(SponsorCard,{sponsor:{...booked,enabled:false}})),'');
+ for(const url of ['javascript:alert(1)','data:text/html,test','https://name:password@example.com']){
+  assert.equal(sponsorSchema.safeParse({...booked,url}).success,false);
+ }
+ assert.equal(sponsorSchema.safeParse({...booked,title:''}).success,false);
+});
