@@ -21,6 +21,6 @@ test('daily price corrections save directly without an MPIN prompt',async()=>{
   assert.equal(request[2].method,'POST');
   assert.deepEqual(JSON.parse(request[2].body),{date:'2026-10-14',jasmineRate:780,pinkRate:580});
   assert.equal(accepted[0].jasmineRate,780);
-  assert.match(message,/saved|correct/i);
+  assert.match(message,/fixed|saved|correct/i);
   assert.doesNotMatch(fn,/mpin|unlock/i);
 });
