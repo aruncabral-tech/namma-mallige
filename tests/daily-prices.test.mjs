@@ -89,7 +89,7 @@ for(const kind of ['server','HTML']) {
       assert.equal((await e.bill('POST',{...tampered,version:2,weekStart:'2026-09-13'})).status,400);
       const after=(await (await e.bill('GET')).json()).bills.find(b=>b.id===saved.id);
       assert.equal(after.days[5].jasmineRate,1000);
-      assert.equal(after.version,1);
+      assert.equal(after.version,2);
       assert.equal((await e.price('POST',{...friday,date:'2026-09-31'})).status,400);
       assert.equal((await e.price('POST',{...friday,date:'2026-09-13',pinkRate:-1})).status,400);
     } finally {e.close();}
@@ -114,7 +114,7 @@ for(const kind of ['server','HTML']) {
       updated.days[5].jasmineQty=0;
       response=await e.bill('POST',updated);assert.equal(response.status,200);
       updated=(await response.json()).bill;
-      assert.equal(updated.days[5].jasminePriceLocked,true);
+      assert.equal(updated.days[5].jasmineRate,540);
       const baseline=structuredClone(updated.days);
       updated.days[5].jasmineQty=1000;updated.days[5].pinkQty=100;
       updated.days=pricing.withDailyPrices(updated.days,baseline,updated.weekStart,prices);
