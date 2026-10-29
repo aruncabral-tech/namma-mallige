@@ -1,4 +1,4 @@
-import { requireBookOwner, AccountError, accountError, verifyMpin } from "@/lib/account-auth";
+import { requireBookOwner, AccountError, accountError } from "@/lib/account-auth";
 import { ownerPrices, insertOwnerPrice } from "@/lib/owner-prices";
 import { z } from "zod";
 import { billingDb } from "@/db/billing";
@@ -9,7 +9,7 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 });
 const rate = z.number().finite().min(0).max(100000000);
-const priceSchema = z.object({ date, jasmineRate: rate, pinkRate: rate, mpin: z.string().regex(/^\d{4}$/).optional() });
+const priceSchema = z.object({ date, jasmineRate: rate, pinkRate: rate });
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
@@ -39,9 +39,6 @@ export async function POST(request: Request) {
     }
     const [existing] = await ownerPrices(owner.id, date, date);
     if (existing?.jasmineRate === jasmineRate && existing?.pinkRate === pinkRate) return Response.json({ price: existing });
-    if (!parsed.data.mpin) return Response.json({ error: "Prices are fixed. Enter your 4-digit MPIN to unlock and change them.", price: existing, needsMpin: true }, { status: 409 });
-    const row = await billingDb().prepare("SELECT mpin_hash AS mpinHash FROM owners WHERE id = ?").bind(owner.id).first() as {mpinHash?: string | null} | null;
-    if (!row?.mpinHash || !verifyMpin(parsed.data.mpin, row.mpinHash)) return Response.json({ error: "The MPIN is incorrect." }, { status: 401 });
     const legacy = owner.id === "existing-book";
     const table = legacy ? "daily_prices" : "book_daily_prices";
     const ownerValue = legacy ? [] : [owner.id];
