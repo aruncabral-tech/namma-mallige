@@ -1,9 +1,8 @@
 import { requireBookOwner, AccountError, accountError } from "@/lib/account-auth";
-import { ownerPrices } from "@/lib/owner-prices";
 import { billingDb } from "@/db/billing";
 import { z } from "zod";
 import { billBalance, isPaymentAmount, paymentFields } from "@/lib/bill-payments";
-import { checkBillPrices, flowerDate, lockBillPrices, type FlowerDay } from "@/lib/daily-prices";
+import type { FlowerDay } from "@/lib/daily-prices";
 import { billSchema as schema } from "@/lib/bill-schema";
 import { syncGoogleSheet } from "@/lib/google-sheet-sync";
 export async function GET(request: Request) {
@@ -26,12 +25,10 @@ export async function POST(request: Request) {
     if(version > 0 && (!current || current.version !== version)) return Response.json({error:"This bill changed on another device. Refresh and reopen the saved bill before editing again."}, {status:409});
     const previous = current ? JSON.parse(current.payload) as { days: FlowerDay[]; weekStart: string; openingBalance?: number; amountPaid?: number; paymentHistory?: import("@/lib/bill-payments").PaymentRecord[] } : undefined;
     if (previous && previous.weekStart !== payload.weekStart) return Response.json({ error: "A saved bill keeps its original flower dates. Create a new weekly bill for another week." }, { status: 400 });
-    const records = await ownerPrices(owner.id, payload.weekStart, flowerDate(payload.weekStart, 6));
-    const prices = Object.fromEntries(records.map(price => [price.date, price]));
-    const priceError = checkBillPrices(payload.days, previous?.days, payload.weekStart, prices);
-    if (priceError) return Response.json({ error: priceError.error }, { status: priceError.status });
+    // Rates are stored per customer bill and may be edited independently.
+    // Daily prices are only starting defaults; they must not override this customer's chosen rates.
     // Preserve payment fields when an older open copy of the app omits them.
-    const savedPayload = { ...payload, days: lockBillPrices(payload.days, previous?.days, payload.weekStart, prices), ...paymentFields(payload, previous) };
+    const savedPayload = { ...payload, days: payload.days, ...paymentFields(payload, previous) };
     if ((savedPayload.paymentHistory ?? []).reduce((n,p) => n + Math.round(p.amount * 100),0) > Math.round(savedPayload.amountPaid * 100)) return Response.json({error:"Payment history cannot exceed the total paid. Refresh this bill."}, {status:400});
     if(billBalance(savedPayload).pending < 0) return Response.json({error:"Amount paid cannot be more than this week's flowers plus the old pending amount."}, {status:400});
     const row = version === 0
