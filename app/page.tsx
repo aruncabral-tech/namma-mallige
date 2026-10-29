@@ -479,7 +479,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
         const value = event.target.value === "" ? 0 : Number(event.target.value);
         if (!Number.isFinite(value) || value < 0 || value > 100000000) return;
         setDirty(true); setShareMessage("");
-        setDays(all => all.map((entry, index) => index === i ? { ...entry, [rateKey]: value } : entry));
+        setDays(all => all.map((entry, index) => index === i ? { ...entry, [rateKey]: value, [`${kind}PriceLocked`]: true } : entry));
       }} /><small>This rate belongs to this customer's bill. You can change it whenever needed.</small></label>
       <fieldset className="quantity-fieldset"><FlowerQuantityInput key={`${id}-${entrySession}-${i}-${kind}`} fieldId={`${kind}-${i}`} qty={day[qtyKey]} unit={day[unitKey]} onEditing={() => { setDirty(true); setShareMessage(""); }} onChange={(qty, unit) => {
         setDirty(true); setShareMessage("");
