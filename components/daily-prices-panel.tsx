@@ -39,13 +39,13 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
       const data = await response.json();
       if (data.price) { onPrices([data.price]); }
       if (!response.ok) throw new Error(data.error);
-      setMessage("Prices fixed for this date. Every customer’s new flower entry will use these prices.");
+      setMessage("Default rates saved. You can change each customer's rates separately in Daily entry.");
     } catch (error) { setError(error instanceof Error ? error.message : "Could not confirm prices. Please refresh and check."); }
     finally { setSaving(false); }
   };
   return <section className="panel daily-prices-panel" aria-label="Daily flower prices">
     <div className="daily-prices-toolbar"><label htmlFor="daily-price-date"><T text="Flower date"/><Input id="daily-price-date" type="date" value={date} disabled={saving} onChange={event => { if(event.target.value) onDateChange(event.target.value); }} /></label><Button variant="outline" disabled={saving} onClick={() => onDateChange(todayInIndia())}><CalendarDays /> <T text="Today"/></Button><Button variant="ghost" disabled={saving || loading} onClick={() => setRefresh(value => value + 1)}><RotateCcw /> <T text="Refresh prices"/></Button></div>
-    <div className="daily-prices-heading"><div><h3>{label}</h3><p>One price for each flower, shared by all customers.</p></div>{fixed && <span className="price-lock-badge"><span><T text="Prices saved"/><small>Editable directly</small></span></span>}</div>
+    <div className="daily-prices-heading"><div><h3>{label}</h3><p>Default rates for the date. Each customer can have a different rate on their own bill.</p></div>{fixed && <span className="price-lock-badge"><span><T text="Prices saved"/><small>Editable directly</small></span></span>}</div>
     {error && <p className="status-bar error" role="alert">{error}</p>}
     {message && <p className="status-bar" role="status"><CheckCircle2 />{message}</p>}
     {loading && !fixed && <p className="status-bar" role="status">Checking prices for this date…</p>}
@@ -55,9 +55,9 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
         <img className="daily-flower-photo" src={flower.kind === "jasmine" ? "/mallige-reference.png" : "/jajji-reference.png"} alt="" aria-hidden="true" />
         <label htmlFor={`daily-price-${flower.code}`}>{flower.code} price per atte (₹)<Input id={`daily-price-${flower.code}`} type="number" inputMode="decimal" min="0" max="100000000" step="any" required value={flower.value !== "" ? flower.value : (fixed ? String(fixed[`${flower.kind}Rate`]) : "")} disabled={loading || saving} onChange={event => flower.change(event.target.value)} placeholder="Enter price" /></label>
       </section>)}</div>
-      <p className="daily-price-rule">{fixed ? "Change either price and save the correction. New entries for this date will use the updated prices." : "Check both prices before saving. These prices apply to new entries for this date."}</p>
+      <p className="daily-price-rule">{fixed ? "Change these default rates for this date. Individual customer bills can use different rates." : "Set the default rates. You can adjust rates separately on each customer's bill."}</p>
       <div className="daily-prices-actions"><Button type="submit" disabled={loading || saving || mPrice === "" || jPrice === ""}><Save />{saving ? "Saving prices…" : fixed ? "Save price correction" : "Save prices"}</Button><Button type="button" variant="outline" disabled={saving} onClick={onContinue}><T text="Go to daily entry"/> <ChevronRight /></Button></div>
     </form>
-    <p className="daily-price-note">Prices follow the date of the flowers. Tomorrow has its own prices. Previously saved flower entries keep their original prices.</p>
+    <p className="daily-price-note">These are starting defaults by flower date. Each customer's saved bill keeps its own editable rates.</p>
   </section>;
 }
