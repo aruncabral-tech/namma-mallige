@@ -2,14 +2,13 @@
 import {T} from "@/components/language";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, CheckCircle2, ChevronRight, LockKeyhole, RotateCcw, Save } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronRight, RotateCcw, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dailyPricesRequest } from "@/lib/bills-client";
 import { todayInIndia, type DailyPrice } from "@/lib/daily-prices";
 
 type Props = { date: string; prices: Record<string, DailyPrice>; onDateChange: (date: string) => void; onPrices: (prices: DailyPrice[]) => void; onContinue: () => void };
-const money = (value: number) => value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
 
 export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onContinue }: Props) {
   const fixed = prices[date];
@@ -20,8 +19,6 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [refresh, setRefresh] = useState(0);
-  const [unlockMpin, setUnlockMpin] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
   const label = new Date(date + "T12:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   useEffect(() => {
     let active = true;
@@ -35,12 +32,12 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
     return () => { active = false; };
   }, [date, refresh, onPrices]);
   const save = async () => {
-    if ((fixed && !unlocked) || saving || loading || mPrice === "" || jPrice === "") return;
+    if (saving || loading || mPrice === "" || jPrice === "") return;
     setSaving(true); setError(""); setMessage("");
     try {
-      const response = await dailyPricesRequest(date, date, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, jasmineRate: Number(mPrice), pinkRate: Number(jPrice), ...(unlockMpin ? { mpin: unlockMpin } : {}) }) });
+      const response = await dailyPricesRequest(date, date, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, jasmineRate: Number(mPrice), pinkRate: Number(jPrice) }) });
       const data = await response.json();
-      if (data.price) { onPrices([data.price]); setUnlocked(false); setUnlockMpin(""); }
+      if (data.price) { onPrices([data.price]); }
       if (!response.ok) throw new Error(data.error);
       setMessage("Prices fixed for this date. Every customer’s new flower entry will use these prices.");
     } catch (error) { setError(error instanceof Error ? error.message : "Could not confirm prices. Please refresh and check."); }
@@ -48,7 +45,7 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
   };
   return <section className="panel daily-prices-panel" aria-label="Daily flower prices">
     <div className="daily-prices-toolbar"><label htmlFor="daily-price-date"><T text="Flower date"/><Input id="daily-price-date" type="date" value={date} disabled={saving} onChange={event => { if(event.target.value) onDateChange(event.target.value); }} /></label><Button variant="outline" disabled={saving} onClick={() => onDateChange(todayInIndia())}><CalendarDays /> <T text="Today"/></Button><Button variant="ghost" disabled={saving || loading} onClick={() => setRefresh(value => value + 1)}><RotateCcw /> <T text="Refresh prices"/></Button></div>
-    <div className="daily-prices-heading"><div><h3>{label}</h3><p>One price for each flower, shared by all customers.</p></div>{fixed && <span className="price-lock-badge"><LockKeyhole /> <span><T text="Prices fixed"/><small>MPIN required to change</small></span></span>}</div>
+    <div className="daily-prices-heading"><div><h3>{label}</h3><p>One price for each flower, shared by all customers.</p></div>{fixed && <span className="price-lock-badge"><span><T text="Prices saved"/><small>Editable directly</small></span></span>}</div>
     {error && <p className="status-bar error" role="alert">{error}</p>}
     {message && <p className="status-bar" role="status"><CheckCircle2 />{message}</p>}
     {loading && !fixed && <p className="status-bar" role="status">Checking prices for this date…</p>}
@@ -56,11 +53,11 @@ export function DailyPricesPanel({ date, prices, onDateChange, onPrices, onConti
       <div className="flower-fields-grid">{([{ code: "M", name: "Jasmine", kind: "jasmine", value: mPrice, change: setMPrice }, { code: "J", name: "Pink Jasmine", kind: "pink", value: jPrice, change: setJPrice }] as const).map(flower => <section className={`daily-flower ${flower.kind}`} key={flower.code}>
         <div className="flower-title"><span className="flower-code">{flower.code}</span><div><h3><T text={flower.name}/></h3><p><T text="Price per atte · 3,200 buds"/></p></div></div>
         <img className="daily-flower-photo" src={flower.kind === "jasmine" ? "/mallige-reference.png" : "/jajji-reference.png"} alt="" aria-hidden="true" />
-        {fixed && !unlocked ? <div className="fixed-price-value"><strong>{money(fixed[`${flower.kind}Rate`])}</strong><span>Fixed for {label}</span></div> : <label htmlFor={`daily-price-${flower.code}`}>{flower.code} price per atte (₹)<Input id={`daily-price-${flower.code}`} type="number" inputMode="decimal" min="0" max="100000000" step="any" required value={flower.value || (fixed ? String(fixed[`${flower.kind}Rate`]) : "")} disabled={loading || saving} onChange={event => flower.change(event.target.value)} placeholder="Enter price" /></label>}
+        <label htmlFor={`daily-price-${flower.code}`}>{flower.code} price per atte (₹)<Input id={`daily-price-${flower.code}`} type="number" inputMode="decimal" min="0" max="100000000" step="any" required value={flower.value !== "" ? flower.value : (fixed ? String(fixed[`${flower.kind}Rate`]) : "")} disabled={loading || saving} onChange={event => flower.change(event.target.value)} placeholder="Enter price" /></label>
       </section>)}</div>
-      <p className="daily-price-rule">{fixed && !unlocked ? "These prices are fixed for all customers. Unlock with your MPIN if you need to correct them." : fixed ? "Check both prices, then save the correction." : "Check both prices before saving. Once fixed, changes require your MPIN."}</p>
-      <div className="daily-prices-actions">{fixed && !unlocked ? <><Button type="button" variant="outline" onClick={() => { const value = window.prompt("Enter your 4-digit MPIN to unlock price changes")?.replace(/\D/g, "").slice(0, 4) ?? ""; if (value.length === 4) { setUnlockMpin(value); setUnlocked(true); setMPrice(String(fixed.jasmineRate)); setJPrice(String(fixed.pinkRate)); } }}><LockKeyhole /> Unlock with MPIN</Button><Button type="button" onClick={onContinue}><T text="Go to daily entry"/> <ChevronRight /></Button></> : <Button type="submit" disabled={loading || saving || mPrice === "" || jPrice === ""}><Save />{saving ? "Saving prices…" : fixed ? "Save price correction" : "Save & fix both prices"}</Button>}</div>
+      <p className="daily-price-rule">{fixed ? "Change either price and save the correction. New entries for this date will use the updated prices." : "Check both prices before saving. These prices apply to new entries for this date."}</p>
+      <div className="daily-prices-actions"><Button type="submit" disabled={loading || saving || mPrice === "" || jPrice === ""}><Save />{saving ? "Saving prices…" : fixed ? "Save price correction" : "Save prices"}</Button><Button type="button" variant="outline" disabled={saving} onClick={onContinue}><T text="Go to daily entry"/> <ChevronRight /></Button></div>
     </form>
-    <p className="daily-price-note">Prices follow the date of the flowers. Tomorrow has its own prices. Flower entries already saved keep their original prices.</p>
+    <p className="daily-price-note">Prices follow the date of the flowers. Tomorrow has its own prices. Previously saved flower entries keep their original prices.</p>
   </section>;
 }
