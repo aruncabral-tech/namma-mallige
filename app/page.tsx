@@ -25,7 +25,7 @@ import { FlowerQuantityInput } from "@/components/flower-quantity-input";
 import { splitChenduAndBuds } from "@/lib/flower-quantity";
 import { billBalance, isPaymentAmount, paymentSummary, type PaymentFields, type PaymentRecord } from "@/lib/bill-payments";
 import { DailyPricesPanel } from "@/components/daily-prices-panel";
-import { checkBillPrices, flowerDate, hasSavedFlowerPrice, todayInIndia, withDailyPrices, type DailyPrice, type FlowerDay } from "@/lib/daily-prices";
+import { flowerDate, hasSavedFlowerPrice, todayInIndia, withDailyPrices, type DailyPrice, type FlowerDay } from "@/lib/daily-prices";
 import { AccountGate, Brand } from "@/components/account-gate";
 import { PaymentHistory } from "@/components/payment-history";
 import { BookSettings } from "@/components/book-settings";
@@ -189,7 +189,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
   const [pricesLoading, setPricesLoading] = useState(true);
   const [pricesError, setPricesError] = useState("");
   const days = withDailyPrices(entries, savedEntryPrices, weekStart, prices);
-  const priceProblem = checkBillPrices(days, savedEntryPrices, weekStart, prices);
+  const priceProblem = null; // Each customer bill stores its own editable flower rates.
   const acceptPrices = useCallback((incoming: DailyPrice[]) => setPrices(current => ({ ...current, ...Object.fromEntries(incoming.map(price => [price.date, price])) })), []);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [amountPaid, setAmountPaid] = useState(0);
@@ -477,8 +477,13 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
     const priceReady = savedPrice || Boolean(prices[date]);
     return <section className={`daily-flower ${kind}`} aria-label={name}>
       <div className="flower-title"><span className="flower-code">{kind === "jasmine" ? "M" : "J"}</span><div><h3><T text={name}/></h3><p><T text="Daily flower supply"/></p></div></div>
-      <div className="customer-fixed-price"><span>Price per atte · {dates[i].toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span><strong>{priceReady ? money(day[rateKey]) : "Price not set"}</strong><small>{priceReady ? <><LockKeyhole />{savedPrice ? "Price kept with this saved entry" : "Fixed daily price for all customers"}</> : "Set daily prices to enter flowers."}</small></div>
-      <fieldset disabled={!priceReady} className="quantity-fieldset"><FlowerQuantityInput key={`${id}-${entrySession}-${i}-${kind}`} fieldId={`${kind}-${i}`} qty={day[qtyKey]} unit={day[unitKey]} onEditing={() => { setDirty(true); setShareMessage(""); }} onChange={(qty, unit) => {
+      <label className="customer-fixed-price"><span>{name} price per atte · {dates[i].toLocaleDateString("en-IN", { day: "numeric", month: "short" })} (₹)</span><Input aria-label={`${customer || "Customer"} ${name} price per atte for ${date}`} type="number" inputMode="decimal" min="0" max="100000000" step="any" value={String(day[rateKey])} onChange={event => {
+        const value = event.target.value === "" ? 0 : Number(event.target.value);
+        if (!Number.isFinite(value) || value < 0 || value > 100000000) return;
+        setDirty(true); setShareMessage("");
+        setDays(all => all.map((entry, index) => index === i ? { ...entry, [rateKey]: value } : entry));
+      }} /><small>This rate belongs to this customer's bill. You can change it whenever needed.</small></label>
+      <fieldset className="quantity-fieldset"><FlowerQuantityInput key={`${id}-${entrySession}-${i}-${kind}`} fieldId={`${kind}-${i}`} qty={day[qtyKey]} unit={day[unitKey]} onEditing={() => { setDirty(true); setShareMessage(""); }} onChange={(qty, unit) => {
         setDirty(true); setShareMessage("");
         setDays(all => all.map((entry, index) => index === i ? { ...entry, [qtyKey]: qty, [unitKey]: unit } : entry));
       }} /></fieldset>
