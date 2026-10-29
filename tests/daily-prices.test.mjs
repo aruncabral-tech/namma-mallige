@@ -73,28 +73,29 @@ for(const kind of ['server','HTML']) {
       assert.equal(payments.billBalance(saved).flowerTotal,265.60);
       assert.equal(JSON.stringify(original),before,'pricing must not mutate source entries');
       const second={...original,id:crypto.randomUUID(),customer:'Customer B'};
+      second.days[5].jasmineRate=750;second.days[5].jasminePriceLocked=true;
       assert.equal((await e.bill('POST',second)).status,200);
       const stored=(await (await e.bill('GET')).json()).bills;
       assert.equal(stored.length,2);
-      assert.deepEqual(stored[0].days.map(d=>[d.jasmineRate,d.pinkRate]),stored[1].days.map(d=>[d.jasmineRate,d.pinkRate]));
+      assert.notEqual(stored.find(b=>b.customer==='Customer A').days[5].jasmineRate,stored.find(b=>b.customer==='Customer B').days[5].jasmineRate,'each customer keeps their own price');
       const tampered=structuredClone(saved);
       tampered.days[5].jasmineRate=1000;
-      assert.equal((await e.bill('POST',tampered)).status,409);
+      assert.equal((await e.bill('POST',tampered)).status,200,'saved customer price can be corrected without MPIN');
       const forged=structuredClone(second);
       forged.id=crypto.randomUUID();forged.days[5].jasmineRate=1;forged.days[5].jasminePriceLocked=true;
-      assert.equal((await e.bill('POST',forged)).status,409);
+      assert.equal((await e.bill('POST',forged)).status,200,'a new customer bill may use its own rate');
       const missing=makeBill('Missing price');missing.days[4].jasmineQty=100;
-      assert.equal((await e.bill('POST',missing)).status,400);
-      assert.equal((await e.bill('POST',{...saved,weekStart:'2026-09-13'})).status,400);
+      assert.equal((await e.bill('POST',missing)).status,200,'the bill can be saved with its entered individual rate');
+      assert.equal((await e.bill('POST',{...tampered,version:2,weekStart:'2026-09-13'})).status,400);
       const after=(await (await e.bill('GET')).json()).bills.find(b=>b.id===saved.id);
-      assert.equal(after.days[5].jasmineRate,800);
+      assert.equal(after.days[5].jasmineRate,1000);
       assert.equal(after.version,1);
       assert.equal((await e.price('POST',{...friday,date:'2026-09-31'})).status,400);
       assert.equal((await e.price('POST',{...friday,date:'2026-09-13',pinkRate:-1})).status,400);
     } finally {e.close();}
   });
 
-  test(`${kind}: original prices survive edits and zero quantities; new flowers use the day's common prices`,async()=>{
+  test(`${kind}: customer-specific rates remain editable and defaults are used only initially`,async()=>{
     const e=await engine(kind);
     try {
       const legacy={...makeBill('Older bill'),version:1};
