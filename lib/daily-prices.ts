@@ -31,7 +31,7 @@ export function withDailyPrices(entries: FlowerDay[], previous: FlowerDay[] | un
       // Keep the current bill's editable rate. Saved entries initialize this value,
       // but a customer-specific correction must not be overwritten by the old saved copy.
       const explicitlyEdited = Boolean(day[`${kind}PriceLocked`]);
-      const preserveCurrent = explicitlyEdited || hasSavedFlowerPrice(saved, kind);
+      const preserveCurrent = explicitlyEdited || Boolean(saved) || hasSavedFlowerPrice(saved, kind);
       day[`${kind}Rate`] = preserveCurrent ? day[`${kind}Rate`] : price?.[`${kind}Rate`] ?? day[`${kind}Rate`] ?? 0;
       day[`${kind}PriceLocked`] = preserveCurrent;
     }
