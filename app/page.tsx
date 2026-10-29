@@ -480,7 +480,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
         if (!Number.isFinite(value) || value < 0 || value > 100000000) return;
         setDirty(true); setShareMessage("");
         setDays(all => all.map((entry, index) => index === i ? { ...entry, [rateKey]: value, [`${kind}PriceLocked`]: true } : entry));
-      }} /><small>This rate belongs to this customer's bill. You can change it whenever needed.</small></label>
+      }} /><small>This rate belongs to this customer’s bill. Change it whenever needed; no MPIN is required for the rate edit.</small></label>
       <fieldset className="quantity-fieldset"><FlowerQuantityInput key={`${id}-${entrySession}-${i}-${kind}`} fieldId={`${kind}-${i}`} qty={day[qtyKey]} unit={day[unitKey]} onEditing={() => { setDirty(true); setShareMessage(""); }} onChange={(qty, unit) => {
         setDirty(true); setShareMessage("");
         setDays(all => all.map((entry, index) => index === i ? { ...entry, [qtyKey]: qty, [unitKey]: unit } : entry));
@@ -511,7 +511,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
         </nav>
         <div className="book-workspace" id="book-workspace" tabIndex={-1}>
         <div className="page-heading">
-          <div><p className="page-kicker">{businessDate().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p><h2><T text={view === "reports" ? "Monthly reports" : view === "prices" ? "Daily flower prices" : view === "daily" ? "Daily flower entry" : personal ? "My flower diary" : "Customer account book"}/></h2><p>{view === "reports" ? "Your saved flowers and payments, month by month." : view === "prices" ? "Set M and J prices once for each flower date." : view === "daily" ? "Enter the day’s flowers using the fixed daily prices." : personal ? "Your daily flowers, earnings and payments, week by week." : "Every customer’s seven-day bill, ready for Saturday."}</p></div>
+          <div><p className="page-kicker">{businessDate().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p><h2><T text={view === "reports" ? "Monthly reports" : view === "prices" ? "Daily flower prices" : view === "daily" ? "Daily flower entry" : personal ? "My flower diary" : "Customer account book"}/></h2><p>{view === "reports" ? "Your saved flowers and payments, month by month." : view === "prices" ? "Set default M and J rates for each flower date." : view === "daily" ? "Enter flowers and adjust rates for this customer individually." : personal ? "Your daily flowers, earnings and payments, week by week." : "Every customer’s seven-day bill, ready for Saturday."}</p></div>
           {view !== "prices" && view !== "reports" && <div className="heading-actions">
             <span className={`save-state ${dirty ? "unsaved" : version ? "saved" : ""}`}>{busy ? <LoaderCircle className="spin" /> : dirty ? <Info /> : version ? <CheckCircle2 /> : <BookOpen />}{busy ? "Please wait…" : dirty ? "Unsaved changes" : version ? "Bill saved" : "New bill"}</span>
             <Button onClick={() => reset(false)} disabled={busy || dirty}><Plus /> <T text={personal ? "New diary record" : "Add bill"}/></Button>
