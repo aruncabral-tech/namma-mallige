@@ -28,7 +28,9 @@ export function withDailyPrices(entries: FlowerDay[], previous: FlowerDay[] | un
     const price = prices[flowerDate(weekStart, index)];
     for (const kind of FLOWER_KINDS) {
       const saved = previous?.[index];
-      day[`${kind}Rate`] = hasSavedFlowerPrice(saved, kind) ? saved![`${kind}Rate`] : price?.[`${kind}Rate`] ?? 0;
+      // Keep the current bill's editable rate. Saved entries initialize this value,
+      // but a customer-specific correction must not be overwritten by the old saved copy.
+      day[`${kind}Rate`] = hasSavedFlowerPrice(saved, kind) ? day[`${kind}Rate`] : price?.[`${kind}Rate`] ?? day[`${kind}Rate`] ?? 0;
       day[`${kind}PriceLocked`] = hasSavedFlowerPrice(saved, kind);
     }
     return day;
