@@ -472,9 +472,7 @@ function BillingApp({ owner, onOwnerChange, onSignedOut }: {owner: OwnerAccount;
     const unitKey = `${kind}Unit` as "jasmineUnit" | "pinkUnit";
     const rateKey = `${kind}Rate` as "jasmineRate" | "pinkRate";
     const name = kind === "jasmine" ? "Jasmine" : "Pink Jasmine";
-    const savedPrice = hasSavedFlowerPrice(savedEntryPrices?.[i], kind);
     const date = flowerDate(weekStart, i);
-    const priceReady = savedPrice || Boolean(prices[date]);
     return <section className={`daily-flower ${kind}`} aria-label={name}>
       <div className="flower-title"><span className="flower-code">{kind === "jasmine" ? "M" : "J"}</span><div><h3><T text={name}/></h3><p><T text="Daily flower supply"/></p></div></div>
       <label className="customer-fixed-price"><span>{name} price per atte · {dates[i].toLocaleDateString("en-IN", { day: "numeric", month: "short" })} (₹)</span><Input aria-label={`${customer || "Customer"} ${name} price per atte for ${date}`} type="number" inputMode="decimal" min="0" max="100000000" step="any" value={String(day[rateKey])} onChange={event => {
