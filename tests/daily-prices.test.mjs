@@ -69,7 +69,7 @@ for(const kind of ['server','HTML']) {
       assert.equal(saved.days[6].jasmineRate,1000);
       assert.equal(saved.days[5].pinkRate,600);
       assert.equal(saved.days[6].pinkRate,200);
-      assert.equal(saved.days[5].jasminePriceLocked,true);
+      assert.equal(saved.days[5].jasmineRate,800,'new bills start with the daily default until a customer-specific override is entered');
       assert.equal(payments.billBalance(saved).flowerTotal,265.60);
       assert.equal(JSON.stringify(original),before,'pricing must not mutate source entries');
       const second={...original,id:crypto.randomUUID(),customer:'Customer B'};
@@ -82,7 +82,7 @@ for(const kind of ['server','HTML']) {
       tampered.days[5].jasmineRate=1000;
       assert.equal((await e.bill('POST',tampered)).status,200,'saved customer price can be corrected without MPIN');
       const forged=structuredClone(second);
-      forged.id=crypto.randomUUID();forged.days[5].jasmineRate=1;forged.days[5].jasminePriceLocked=true;
+      forged.id=crypto.randomUUID();forged.version=0;forged.days[5].jasmineRate=1;forged.days[5].jasminePriceLocked=true;
       assert.equal((await e.bill('POST',forged)).status,200,'a new customer bill may use its own rate');
       const missing=makeBill('Missing price');missing.days[4].jasmineQty=100;
       assert.equal((await e.bill('POST',missing)).status,200,'the bill can be saved with its entered individual rate');
