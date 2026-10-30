@@ -134,7 +134,10 @@ export function AccountGate({ children, landing = false }: { landing?: boolean; 
     finally { window.clearTimeout(timer); setLoading(false); }
   };
   useEffect(() => { void load(); const expired=()=>{setBillingOwner("");setOwner(null);setError("");setLoading(false);}; window.addEventListener("account-session-expired",expired);return()=>window.removeEventListener("account-session-expired",expired); }, []);
-  if (loading) return <main className="account-loading"><Brand /><p role="status">Opening your account…</p></main>;
+  if (loading) {
+    if (landing && !showSignIn) return <LandingPage onSignIn={() => setShowSignIn(true)} />;
+    return <main className="account-loading"><Brand /><p role="status">Opening your account…</p></main>;
+  }
   if (error && landing && !showSignIn) return <LandingPage onSignIn={()=>setShowSignIn(true)} />;
   if (error) return <main className="account-loading"><Brand /><p role="alert">{error}</p><Button onClick={() => void load()}>Retry</Button><Button variant="outline" onClick={() => { setError(""); setOwner(null); setBillingOwner(""); }}>Open sign in</Button></main>;
   if (!owner && landing && !showSignIn) return <LandingPage onSignIn={()=>setShowSignIn(true)} />;
