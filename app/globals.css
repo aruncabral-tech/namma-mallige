@@ -1420,3 +1420,72 @@ html:has(.bloom-home){scroll-behavior:smooth}
 .sponsor-owner-image img { max-width:100%; width:360px; max-height:200px; object-fit:contain; border:1px solid #d9ddc9; border-radius:10px; background:white; }
 .sponsor-date-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 @media(max-width:640px) { .sponsor-visual:has(.sponsor-image) { width:100%; } .sponsor-image { width:100%; height:auto; max-height:180px; } .sponsor-date-fields { grid-template-columns:1fr; } }
+
+
+/* Search-friendly landing copy that stays readable and easy to scan. */
+.bloom-faq {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) 5%;
+  color: #082f24;
+  background: #fffdf7;
+}
+.bloom-faq-intro {
+  max-width: 760px;
+  margin: 0 auto 1.5rem;
+}
+.bloom-faq-intro h2 {
+  margin: .6rem 0 1rem;
+  color: #082f24;
+  font-family: Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.12;
+  font-weight: 500;
+}
+.bloom-faq-intro p:not(.bloom-eyebrow) {
+  color: #53665e;
+  line-height: 1.75;
+}
+.bloom-faq-list {
+  display: grid;
+  gap: .75rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.bloom-faq-item {
+  border: 1px solid #e6cf9e;
+  border-radius: 9px;
+  padding: 0 1.1rem;
+  background: #fffef9;
+}
+.bloom-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
+  color: #0b4539;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.bloom-faq-item summary::-webkit-details-marker { display: none; }
+.bloom-faq-item summary::after {
+  content: "+";
+  flex: 0 0 auto;
+  color: #8b6c27;
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+.bloom-faq-item[open] summary::after { content: "−"; }
+.bloom-faq-item p {
+  margin: 0;
+  padding: 0 0 1.1rem;
+  color: #53665e;
+  line-height: 1.75;
+}
+.bloom-faq-item summary:focus-visible {
+  outline: 3px solid #d3a951;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
